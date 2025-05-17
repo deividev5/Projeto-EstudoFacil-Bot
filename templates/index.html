@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EstudoFácil Bot</title>
+    
+    <!-- Importa Tailwind CSS via CDN para estilização rápida e moderna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!--Imagem do Favicon-->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  </head>
+  <body class="bg-gradient-to-r from-blue-100 to-indigo-200 min-h-screen flex items-center justify-center">
+    <!-- Container centralizado com fundo branco, cantos arredondados e sombra -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg">
+      
+      <!-- Título principal da página -->
+      <h1 class="text-2xl font-bold text-center text-indigo-600 mb-6">
+        📚 EstudoFácil Bot
+      </h1>
+
+      <!-- Formulário principal, método POST envia os dados ao backend -->
+      <form method="POST" class="space-y-4">
+        
+        <!-- Campo de seleção: nível de ensino -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Qual seu nível de ensino?
+          </label>
+          <select name="ensino" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+            <option value="ensino_medio">Ensino Médio</option>
+            <option value="vestibular">Vestibular</option>
+            <option value="faculdade">Faculdade</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <!-- Campo de texto: matérias -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Quais matérias você está estudando?
+          </label>
+          <input type="text" name="materias" placeholder="Ex: Matemática, Biologia..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+        </div>
+
+        <!-- Campo numérico: quantidade de dias -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Por quantos dias você quer o plano?
+          </label>
+          <input type="number" name="dias" min="1" placeholder="Ex: 7" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+        </div>
+
+        <!-- Botão de submissão do formulário -->
+        <div class="text-center" id="botao-container">
+          <button type="submit" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition">
+            Criar Plano de Estudo
+          </button>
+        </div>
+
+        <!-- Spinner de carregamento, oculto inicialmente -->
+        <div id="loading" class="text-center mt-4 hidden">
+          <div class="flex justify-center">
+            <!-- Ícone animado de carregamento -->
+            <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+          <p class="text-indigo-600 mt-2 font-semibold">
+            Gerando seu plano de estudos...
+          </p>
+        </div>
+      </form>
+
+      <!-- Exibe o plano gerado se existir -->
+      {% if plano %}
+      <div class="mt-6 p-4 bg-green-100 text-green-800 rounded-xl shadow prose max-w-none">
+        <h2 class="font-bold text-lg mb-2">📅 Seu Plano de Estudo:</h2>
+        <!-- Conteúdo HTML do plano gerado pela IA (markdown convertido) -->
+        <div>{{ plano | safe }}</div>
+      </div>
+
+      <!-- Botão para download do plano em TXT, visível apenas após geração -->
+      <div class="text-center mt-4">
+        <button id="btn-download" onclick="baixarPlano()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden">
+          📥 Baixar Plano 
+        </button>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Scripts JS -->
+    <script>
+      // Elementos do DOM
+      const form = document.querySelector("form");
+      const loading = document.getElementById("loading");
+      const botaoContainer = document.getElementById("botao-container");
+
+      // Ao enviar o formulário, mostra spinner e oculta botão
+      form.addEventListener("submit", () => {
+        loading.classList.remove("hidden");
+        botaoContainer.classList.add("hidden");
+      });
+
+      // Função para baixar o plano de estudos em formato .txt
+      function baixarPlano() {
+        const planoHtml = document.querySelector("div.prose div").innerText;
+        const blob = new Blob([planoHtml], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "plano_de_estudos.txt";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Após o carregamento da página, mostra botão de download se houver conteúdo
+      window.addEventListener("DOMContentLoaded", () => {
+        const planoDiv = document.querySelector("div.prose div");
+        const downloadBtn = document.getElementById("btn-download");
+
+        if (planoDiv && planoDiv.innerText.trim() !== "") {
+          downloadBtn.classList.remove("hidden");
+        }
+      });
+    </script>
+  </body>
+</html>
